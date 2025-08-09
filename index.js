@@ -1,57 +1,23 @@
+require('dotenv').config();
 // ...existing code...
-
-// GET endpoint to retrieve a specific month's payslip for an employee
-app.get('/api/payslips/month', async (req, res) => {
-  const { employeeId, month, year } = req.query;
-  if (!employeeId || !month || !year) {
-    return res.status(400).json({ error: 'Missing parameters' });
-  }
-
-  try {
-    const employeeDoc = await Payslip.findOne({ 'employee.id': employeeId });
-    if (!employeeDoc) {
-      return res.status(404).json({ error: 'Employee not found' });
-    }
-
-    // Debug log: show request and DB values
-    console.log('Request:', { month, year });
-    console.log('DB salaryDetails:', employeeDoc.salaryDetails.map(s => ({ month: s.month, year: s.year })));
-
-    const payslip = (employeeDoc.salaryDetails || []).find(
-      s => s.month === month && String(s.year) === String(year)
-    );
-    if (!payslip) {
-      return res.status(404).json({ error: 'Payslip not found' });
-    }
-
-    // Optionally, include employee info in the response
-    res.json({
-      ...payslip,
-      ...employeeDoc.employee,
-      company: employeeDoc.employee.company
-    });
-  } catch (err) {
-    res.status(500).json({ error: 'Error retrieving payslip', details: err.message });
-  }
-});
 const express = require('express');
 const mongoose = require('mongoose');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
 // Enable CORS for frontend with credentials and all methods
 const cors = require('cors');
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: process.env.FRONTEND_ORIGIN || 'http://localhost:5173',
   credentials: true,
   methods: 'GET,POST,PUT,DELETE,OPTIONS'
 }));
 
 // MongoDB connection
-mongoose.connect('mongodb+srv://shanoffical2005:UzZjzht1z7Cbcck8@payslip.vthwf5c.mongodb.net/')
+mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
 
